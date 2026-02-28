@@ -74,7 +74,7 @@ export function AppShell(): JSX.Element {
         provider: state.selectedProvider,
         voice_id: state.selectedVoice.voice_id,
         text: state.text,
-        speed: state.speed,
+        speed: 1.0,
       });
       dispatch({ type: "GENERATION_STARTED", jobId: response.job_id });
     } catch {
@@ -83,7 +83,7 @@ export function AppShell(): JSX.Element {
         error: { code: "GENERATION_ERROR", message: "Failed to start generation" },
       });
     }
-  }, [state.selectedProvider, state.selectedVoice, state.text, state.speed, dispatch]);
+  }, [state.selectedProvider, state.selectedVoice, state.text, dispatch]);
 
   // --- Generation polling ---
 
@@ -322,6 +322,7 @@ export function AppShell(): JSX.Element {
             onEnded={handleEnded}
             onSeek={handleSeek}
             isPlaying={state.isPlaying}
+            speed={state.speed}
           />
         </div>
       </div>

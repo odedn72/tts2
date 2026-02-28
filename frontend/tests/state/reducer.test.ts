@@ -298,19 +298,21 @@ describe("appReducer", () => {
   });
 
   describe("PLAYBACK_STARTED", () => {
-    it("should set isPlaying to true", () => {
+    it("should set isPlaying to true and switch to playback view", () => {
       const state = appReducer(initialState, { type: "PLAYBACK_STARTED" });
       expect(state.isPlaying).toBe(true);
+      expect(state.viewMode).toBe("playback");
     });
   });
 
   describe("PLAYBACK_PAUSED", () => {
-    it("should set isPlaying to false", () => {
+    it("should set isPlaying to false and switch to input view", () => {
       const state = appReducer(
-        { ...initialState, isPlaying: true },
+        { ...initialState, isPlaying: true, viewMode: "playback" },
         { type: "PLAYBACK_PAUSED" }
       );
       expect(state.isPlaying).toBe(false);
+      expect(state.viewMode).toBe("input");
     });
   });
 
@@ -325,13 +327,14 @@ describe("appReducer", () => {
   });
 
   describe("PLAYBACK_ENDED", () => {
-    it("should stop playing and reset time", () => {
+    it("should stop playing, reset time, and switch to input view", () => {
       const state = appReducer(
-        { ...initialState, isPlaying: true, currentTimeMs: 5000 },
+        { ...initialState, isPlaying: true, currentTimeMs: 5000, viewMode: "playback" },
         { type: "PLAYBACK_ENDED" }
       );
       expect(state.isPlaying).toBe(false);
       expect(state.currentTimeMs).toBe(0);
+      expect(state.viewMode).toBe("input");
     });
   });
 

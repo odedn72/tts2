@@ -180,16 +180,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case "PLAYBACK_STARTED":
-      return { ...state, isPlaying: true };
+      return { ...state, isPlaying: true, viewMode: "playback" };
 
     case "PLAYBACK_PAUSED":
-      return { ...state, isPlaying: false };
+      return { ...state, isPlaying: false, viewMode: "input" };
 
     case "PLAYBACK_TIME_UPDATE":
       return { ...state, currentTimeMs: action.currentTimeMs };
 
     case "PLAYBACK_ENDED":
-      return { ...state, isPlaying: false, currentTimeMs: 0 };
+      return { ...state, isPlaying: false, currentTimeMs: 0, viewMode: "input" };
 
     case "PLAYBACK_SEEK":
       return { ...state, currentTimeMs: action.timeMs };

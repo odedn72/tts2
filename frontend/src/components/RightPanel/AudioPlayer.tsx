@@ -22,6 +22,8 @@ interface AudioPlayerProps {
   onSeek: (timeMs: number) => void;
   /** Whether audio is currently playing */
   isPlaying: boolean;
+  /** Playback speed multiplier */
+  speed?: number;
 }
 
 /** Format milliseconds as "M:SS" */
@@ -44,11 +46,19 @@ export function AudioPlayer({
   onEnded,
   onSeek,
   isPlaying,
+  speed = 1.0,
 }: AudioPlayerProps): JSX.Element | null {
   const audioRef = useRef<HTMLAudioElement>(null);
   const rafRef = useRef<number>(0);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
+
+  // Sync playback rate with speed prop
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  }, [speed]);
 
   // rAF loop for smooth ~60fps time updates during playback
   const tick = useCallback(() => {
