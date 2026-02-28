@@ -53,11 +53,14 @@ export function VoiceSelector({
         <option value="" disabled>
           {loading ? "Loading voices..." : "Select a voice..."}
         </option>
-        {voices.map((voice) => (
-          <option key={voice.voice_id} value={voice.voice_id}>
-            {voice.name} ({voice.language_name})
-          </option>
-        ))}
+        {voices.map((voice) => {
+          const gender = voice.gender === "MALE" ? "M" : voice.gender === "FEMALE" ? "F" : null;
+          return (
+            <option key={voice.voice_id} value={voice.voice_id}>
+              {voice.name} ({voice.language_name}{gender ? `, ${gender}` : ""})
+            </option>
+          );
+        })}
       </select>
     </div>
   );

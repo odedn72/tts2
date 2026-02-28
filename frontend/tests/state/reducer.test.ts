@@ -287,13 +287,13 @@ describe("appReducer", () => {
   });
 
   describe("AUDIO_LOADED", () => {
-    it("should set audioUrl and switch to playback", () => {
+    it("should set audioUrl and stay in input mode", () => {
       const state = appReducer(initialState, {
         type: "AUDIO_LOADED",
         audioUrl: "blob:test-url",
       });
       expect(state.audioUrl).toBe("blob:test-url");
-      expect(state.viewMode).toBe("playback");
+      expect(state.viewMode).toBe("input");
     });
   });
 
