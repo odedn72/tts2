@@ -38,6 +38,7 @@ export function AppShell(): JSX.Element {
 
   const handleProviderSelect = useCallback(
     (provider: ProviderName) => {
+      localStorage.setItem("tts-selected-provider", provider);
       dispatch({ type: "PROVIDER_SELECTED", provider });
       loadVoices(provider);
     },
@@ -46,6 +47,7 @@ export function AppShell(): JSX.Element {
 
   const handleVoiceSelect = useCallback(
     (voice: Voice) => {
+      localStorage.setItem("tts-selected-voice-id", voice.voice_id);
       dispatch({ type: "VOICE_SELECTED", voice });
     },
     [dispatch]

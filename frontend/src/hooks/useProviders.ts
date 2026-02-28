@@ -7,7 +7,7 @@
 import { useEffect, useCallback } from "react";
 import { apiClient } from "../api/client";
 import type { AppAction } from "../state/actions";
-import type { ProviderName } from "../types/provider";
+import type { ProviderName, ProviderInfo } from "../types/provider";
 
 /**
  * Return type of the useProviders hook.
@@ -26,7 +26,7 @@ interface UseProvidersReturn {
 export function useProviders(
   dispatch: React.Dispatch<AppAction>
 ): UseProvidersReturn {
-  // Fetch providers list on mount
+  // Fetch providers list on mount, then restore saved selection
   useEffect(() => {
     async function loadProviders(): Promise<void> {
       try {
@@ -35,6 +35,39 @@ export function useProviders(
           type: "PROVIDERS_LOADED",
           providers: response.providers,
         });
+
+        // Restore saved provider selection
+        const savedProvider = localStorage.getItem("tts-selected-provider") as ProviderName | null;
+        if (savedProvider) {
+          const providerInfo = response.providers.find(
+            (p: ProviderInfo) => p.name === savedProvider && p.is_configured
+          );
+          if (providerInfo) {
+            dispatch({ type: "PROVIDER_SELECTED", provider: savedProvider });
+
+            // Load voices and restore saved voice selection
+            dispatch({ type: "VOICES_LOADING" });
+            try {
+              const voicesResponse = await apiClient.getVoices(savedProvider);
+              dispatch({ type: "VOICES_LOADED", voices: voicesResponse.voices });
+
+              const savedVoiceId = localStorage.getItem("tts-selected-voice-id");
+              if (savedVoiceId) {
+                const voice = voicesResponse.voices.find(
+                  (v: { voice_id: string }) => v.voice_id === savedVoiceId
+                );
+                if (voice) {
+                  dispatch({ type: "VOICE_SELECTED", voice });
+                }
+              }
+            } catch {
+              dispatch({
+                type: "ERROR_SET",
+                error: { code: "VOICES_ERROR", message: "Failed to load voices" },
+              });
+            }
+          }
+        }
       } catch {
         dispatch({
           type: "ERROR_SET",
