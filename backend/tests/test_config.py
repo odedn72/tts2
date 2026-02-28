@@ -84,11 +84,25 @@ class TestSettings:
         settings = Settings()
         assert settings.openai_api_key == "sk-test-key"
 
+    def test_settings_google_api_key_from_env(self, monkeypatch):
+        from src.config import Settings
+
+        monkeypatch.setenv("GOOGLE_API_KEY", "AIza-test-key")
+        settings = Settings()
+        assert settings.google_api_key == "AIza-test-key"
+
+    def test_settings_google_api_key_default_none(self):
+        from src.config import Settings
+
+        settings = Settings()
+        assert settings.google_api_key is None
+
     def test_settings_all_keys_default_none(self):
         from src.config import Settings
 
         settings = Settings()
         assert settings.google_credentials_path is None
+        assert settings.google_api_key is None
         assert settings.aws_access_key_id is None
         assert settings.aws_secret_access_key is None
         assert settings.elevenlabs_api_key is None
@@ -145,6 +159,20 @@ class TestRuntimeConfig:
         )
         config = RuntimeConfig(settings)
         assert config.get_google_credentials_path() == "/path/creds.json"
+
+    def test_runtime_config_google_api_key(self, monkeypatch):
+        from src.config import RuntimeConfig
+
+        settings = self._make_settings(monkeypatch, GOOGLE_API_KEY="AIza-test-key")
+        config = RuntimeConfig(settings)
+        assert config.get_google_api_key() == "AIza-test-key"
+
+    def test_runtime_config_google_api_key_default_none(self, monkeypatch):
+        from src.config import RuntimeConfig, Settings
+
+        settings = Settings()
+        config = RuntimeConfig(settings)
+        assert config.get_google_api_key() is None
 
     def test_runtime_config_aws_credentials(self, monkeypatch):
         from src.config import RuntimeConfig
@@ -227,14 +255,34 @@ class TestRuntimeConfig:
         config.set_provider_key(ProviderName.OPENAI, "sk-new-key")
         assert config.is_provider_configured(ProviderName.OPENAI) is True
 
+    def test_is_provider_configured_google_with_api_key(self, monkeypatch):
+        from src.config import RuntimeConfig
+        from src.api.schemas import ProviderName
+
+        settings = self._make_settings(monkeypatch, GOOGLE_API_KEY="AIza-test-key")
+        config = RuntimeConfig(settings)
+        assert config.is_provider_configured(ProviderName.GOOGLE) is True
+
+    def test_is_provider_configured_google_with_both(self, monkeypatch):
+        from src.config import RuntimeConfig
+        from src.api.schemas import ProviderName
+
+        settings = self._make_settings(
+            monkeypatch,
+            GOOGLE_APPLICATION_CREDENTIALS="/path/creds.json",
+            GOOGLE_API_KEY="AIza-test-key",
+        )
+        config = RuntimeConfig(settings)
+        assert config.is_provider_configured(ProviderName.GOOGLE) is True
+
     def test_set_provider_key_google(self, monkeypatch):
         from src.config import RuntimeConfig, Settings
         from src.api.schemas import ProviderName
 
         settings = Settings()
         config = RuntimeConfig(settings)
-        config.set_provider_key(ProviderName.GOOGLE, "/new/path.json")
-        assert config.get_google_credentials_path() == "/new/path.json"
+        config.set_provider_key(ProviderName.GOOGLE, "AIza-new-key")
+        assert config.get_google_api_key() == "AIza-new-key"
 
     def test_set_provider_key_elevenlabs(self, monkeypatch):
         from src.config import RuntimeConfig, Settings

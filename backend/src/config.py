@@ -30,6 +30,7 @@ class Settings(BaseSettings):
         default=None,
         alias="GOOGLE_APPLICATION_CREDENTIALS",
     )
+    google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")
 
     # Amazon Polly
     aws_access_key_id: str | None = Field(default=None, alias="AWS_ACCESS_KEY_ID")
@@ -68,6 +69,10 @@ class RuntimeConfig:
         """Get the Google Cloud credentials file path."""
         return self._overrides.get("google_credentials_path") or self._base.google_credentials_path
 
+    def get_google_api_key(self) -> str | None:
+        """Get the Google API key (for Vertex AI Express / REST API)."""
+        return self._overrides.get("google_api_key") or self._base.google_api_key
+
     def get_aws_access_key_id(self) -> str | None:
         """Get the AWS access key ID."""
         return self._overrides.get("aws_access_key_id") or self._base.aws_access_key_id
@@ -95,7 +100,7 @@ class RuntimeConfig:
         This does NOT persist to disk -- it is session-only.
         """
         key_map: dict[ProviderName, str] = {
-            ProviderName.GOOGLE: "google_credentials_path",
+            ProviderName.GOOGLE: "google_api_key",
             ProviderName.AMAZON: "aws_access_key_id",
             ProviderName.ELEVENLABS: "elevenlabs_api_key",
             ProviderName.OPENAI: "openai_api_key",
@@ -107,7 +112,7 @@ class RuntimeConfig:
     def is_provider_configured(self, provider: ProviderName) -> bool:
         """Check if a provider has credentials set."""
         checkers: dict[ProviderName, callable] = {
-            ProviderName.GOOGLE: lambda: bool(self.get_google_credentials_path()),
+            ProviderName.GOOGLE: lambda: bool(self.get_google_credentials_path() or self.get_google_api_key()),
             ProviderName.AMAZON: lambda: bool(
                 self.get_aws_access_key_id() and self.get_aws_secret_access_key()
             ),
