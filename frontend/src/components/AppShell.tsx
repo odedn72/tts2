@@ -18,6 +18,7 @@ import { ProviderSelector } from "./LeftPanel/ProviderSelector";
 import { VoiceSelector } from "./LeftPanel/VoiceSelector";
 import { SpeedControl } from "./LeftPanel/SpeedControl";
 import { GenerateButton } from "./LeftPanel/GenerateButton";
+import { CostEstimate } from "./LeftPanel/CostEstimate";
 import { SettingsPanel } from "./LeftPanel/SettingsPanel";
 import { TextInputArea } from "./RightPanel/TextInputArea";
 import { HighlightedTextView } from "./RightPanel/HighlightedTextView";
@@ -282,6 +283,11 @@ export function AppShell(): JSX.Element {
             onClick={handleGenerate}
             disabled={!canGenerate}
             loading={isGenerating}
+          />
+          <CostEstimate
+            text={state.text}
+            provider={state.selectedProvider}
+            voice={state.selectedVoice}
           />
         </div>
 
