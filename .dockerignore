@@ -1,0 +1,59 @@
+# =============================================================================
+# .dockerignore - Keep Docker build context small and clean
+# =============================================================================
+
+# Version control
+.git
+.gitignore
+
+# Claude/AI config
+.claude/
+
+# Documentation (not needed in image)
+docs/
+
+# Backend development artifacts
+backend/.venv/
+backend/.pytest_cache/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/*.egg-info/
+backend/tts_reader_backend.egg-info/
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/tests/
+backend/.coverage
+backend/htmlcov/
+backend/.ruff_cache/
+
+# Frontend development artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/tests/
+frontend/.env
+frontend/.env.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (avoid recursive builds)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+
+# Misc
+*.md
+LICENSE

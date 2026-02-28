@@ -1,0 +1,110 @@
+# =============================================================================
+# TTS Reader - Docker Compose
+#
+# Usage:
+#   Production:  docker compose up
+#   Development: docker compose --profile dev up
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Production: single container with built frontend + backend
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tts-reader
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_FORMAT=json
+      - LOG_LEVEL=INFO
+      - AUDIO_STORAGE_DIR=/tmp/tts-app-audio
+    volumes:
+      # Persist generated audio across restarts
+      - audio-data:/tmp/tts-app-audio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+
+  # ---------------------------------------------------------------------------
+  # Development: backend with hot reload, source mounted
+  # ---------------------------------------------------------------------------
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: tts-reader-backend-dev
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_FORMAT=text
+      - LOG_LEVEL=DEBUG
+      - AUDIO_STORAGE_DIR=/tmp/tts-app-audio
+    volumes:
+      # Mount source code for hot reload
+      - ./backend/src:/app/backend/src:ro
+      - audio-data-dev:/tmp/tts-app-audio
+    command: >
+      uvicorn src.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app/backend/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  # ---------------------------------------------------------------------------
+  # Development: frontend with Vite dev server and HMR
+  # ---------------------------------------------------------------------------
+  frontend-dev:
+    image: node:20.11-alpine
+    container_name: tts-reader-frontend-dev
+    working_dir: /app/frontend
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend-node-modules:/app/frontend/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      backend-dev:
+        condition: service_healthy
+    profiles:
+      - dev
+
+volumes:
+  audio-data:
+    driver: local
+  audio-data-dev:
+    driver: local
+  frontend-node-modules:
+    driver: local
