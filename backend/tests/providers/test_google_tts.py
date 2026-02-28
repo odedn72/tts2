@@ -338,7 +338,7 @@ class TestGoogleCloudTTSProviderListVoicesREST:
         assert provider._http_client.get.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_list_voices_rest_multi_language(self):
+    async def test_list_voices_rest_filters_to_en_us(self):
         from src.providers.google_tts import GoogleCloudTTSProvider
 
         provider = GoogleCloudTTSProvider(_make_config(api_key="AIza-test-key"))
@@ -351,7 +351,12 @@ class TestGoogleCloudTTSProviderListVoicesREST:
                         "name": "de-DE-Neural2-A",
                         "languageCodes": ["de-DE"],
                         "ssmlGender": "FEMALE",
-                    }
+                    },
+                    {
+                        "name": "en-US-Neural2-B",
+                        "languageCodes": ["en-US", "en-GB"],
+                        "ssmlGender": "MALE",
+                    },
                 ]
             },
         )
@@ -361,7 +366,8 @@ class TestGoogleCloudTTSProviderListVoicesREST:
 
         voices = await provider.list_voices()
         assert len(voices) == 1
-        assert voices[0].language_code == "de-DE"
+        assert voices[0].voice_id == "en-US-Neural2-B"
+        assert voices[0].language_code == "en-US"
 
 
 class TestGoogleCloudTTSProviderSynthesizeREST:

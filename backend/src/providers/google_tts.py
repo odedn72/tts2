@@ -112,10 +112,10 @@ class GoogleCloudTTSProvider(TTSProvider):
         voices: list[Voice] = []
         for voice in data.get("voices", []):
             lang_codes = voice.get("languageCodes", [])
-            if not lang_codes:
+            # Only include voices that support en-US
+            if "en-US" not in lang_codes:
                 continue
-            # Pick en-US if available, otherwise the first language code
-            lang_code = "en-US" if "en-US" in lang_codes else lang_codes[0]
+            lang_code = "en-US"
             voice_name = voice.get("name", "")
             # Short names (no dashes) are Chirp3-HD voices; expand to full ID.
             if "-" not in voice_name:
@@ -217,10 +217,10 @@ class GoogleCloudTTSProvider(TTSProvider):
         voices: list[Voice] = []
         for voice in response.voices:
             lang_codes = list(voice.language_codes)
-            if not lang_codes:
+            # Only include voices that support en-US
+            if "en-US" not in lang_codes:
                 continue
-            # Pick en-US if available, otherwise the first language code
-            lang_code = "en-US" if "en-US" in lang_codes else lang_codes[0]
+            lang_code = "en-US"
             voice_id = voice.name
             # Short names (no dashes, e.g. "Achernar") are Chirp3-HD voices;
             # expand to full ID so synthesis works without a separate model_name.
