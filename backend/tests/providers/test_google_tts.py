@@ -115,6 +115,28 @@ class TestGoogleCloudTTSProviderListVoicesGRPC:
             assert voices[0].voice_id == "en-US-Neural2-A"
 
     @pytest.mark.asyncio
+    async def test_list_voices_expands_short_names_to_chirp3_hd(self):
+        from src.providers.google_tts import GoogleCloudTTSProvider
+        from src.api.schemas import ProviderName
+
+        provider = GoogleCloudTTSProvider(_make_config(credentials_path="/path/creds.json"))
+
+        mock_voice = MagicMock()
+        mock_voice.name = "Achernar"
+        mock_voice.language_codes = ["en-US"]
+        mock_voice.ssml_gender.name = "FEMALE"
+
+        mock_client = AsyncMock()
+        mock_client.list_voices.return_value = MagicMock(voices=[mock_voice])
+
+        with patch.object(provider, "_get_client", return_value=mock_client):
+            voices = await provider.list_voices()
+            assert len(voices) == 1
+            assert voices[0].voice_id == "en-US-Chirp3-HD-Achernar"
+            assert voices[0].name == "Achernar"
+            assert voices[0].provider == ProviderName.GOOGLE
+
+    @pytest.mark.asyncio
     async def test_list_voices_auth_error(self):
         from src.providers.google_tts import GoogleCloudTTSProvider
         from src.errors import ProviderAuthError
@@ -268,6 +290,33 @@ class TestGoogleCloudTTSProviderListVoicesREST:
 
         with pytest.raises(ProviderAPIError):
             await provider.list_voices()
+
+    @pytest.mark.asyncio
+    async def test_list_voices_rest_expands_short_names_to_chirp3_hd(self):
+        from src.providers.google_tts import GoogleCloudTTSProvider
+
+        provider = GoogleCloudTTSProvider(_make_config(api_key="AIza-test-key"))
+
+        mock_response = httpx.Response(
+            200,
+            json={
+                "voices": [
+                    {
+                        "name": "Achernar",
+                        "languageCodes": ["en-US"],
+                        "ssmlGender": "FEMALE",
+                    }
+                ]
+            },
+        )
+
+        provider._http_client = AsyncMock()
+        provider._http_client.get = AsyncMock(return_value=mock_response)
+
+        voices = await provider.list_voices()
+        assert len(voices) == 1
+        assert voices[0].voice_id == "en-US-Chirp3-HD-Achernar"
+        assert voices[0].name == "Achernar"
 
     @pytest.mark.asyncio
     async def test_list_voices_rest_caches_results(self):

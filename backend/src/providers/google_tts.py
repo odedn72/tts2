@@ -113,10 +113,13 @@ class GoogleCloudTTSProvider(TTSProvider):
         for voice in data.get("voices", []):
             for lang_code in voice.get("languageCodes", []):
                 voice_name = voice.get("name", "")
+                # Short names (no dashes) are Chirp3-HD voices; expand to full ID.
+                if "-" not in voice_name:
+                    voice_name = f"{lang_code}-Chirp3-HD-{voice_name}"
                 voices.append(
                     Voice(
                         voice_id=voice_name,
-                        name=voice_name.split("-")[-1] if "-" in voice_name else voice_name,
+                        name=voice_name.split("-")[-1],
                         language_code=lang_code,
                         language_name=lang_code,
                         gender=voice.get("ssmlGender"),
@@ -210,10 +213,15 @@ class GoogleCloudTTSProvider(TTSProvider):
         voices: list[Voice] = []
         for voice in response.voices:
             for lang_code in voice.language_codes:
+                voice_id = voice.name
+                # Short names (no dashes, e.g. "Achernar") are Chirp3-HD voices;
+                # expand to full ID so synthesis works without a separate model_name.
+                if "-" not in voice_id:
+                    voice_id = f"{lang_code}-Chirp3-HD-{voice_id}"
                 voices.append(
                     Voice(
-                        voice_id=voice.name,
-                        name=voice.name.split("-")[-1] if "-" in voice.name else voice.name,
+                        voice_id=voice_id,
+                        name=voice_id.split("-")[-1],
                         language_code=lang_code,
                         language_name=lang_code,
                         gender=voice.ssml_gender.name if voice.ssml_gender else None,
