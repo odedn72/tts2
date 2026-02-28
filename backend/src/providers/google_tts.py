@@ -109,6 +109,7 @@ class GoogleCloudTTSProvider(TTSProvider):
             raise ProviderAPIError("google", sanitize_provider_error(response.text))
 
         data = response.json()
+        seen_ids: set[str] = set()
         voices: list[Voice] = []
         for voice in data.get("voices", []):
             lang_codes = voice.get("languageCodes", [])
@@ -120,6 +121,9 @@ class GoogleCloudTTSProvider(TTSProvider):
             # Short names (no dashes) are Chirp3-HD voices; expand to full ID.
             if "-" not in voice_name:
                 voice_name = f"{lang_code}-Chirp3-HD-{voice_name}"
+            if voice_name in seen_ids:
+                continue
+            seen_ids.add(voice_name)
             voices.append(
                 Voice(
                     voice_id=voice_name,
@@ -214,6 +218,7 @@ class GoogleCloudTTSProvider(TTSProvider):
                 raise ProviderAuthError("google", sanitize_provider_error(error_msg)) from exc
             raise ProviderAPIError("google", sanitize_provider_error(error_msg)) from exc
 
+        seen_ids: set[str] = set()
         voices: list[Voice] = []
         for voice in response.voices:
             lang_codes = list(voice.language_codes)
@@ -226,6 +231,9 @@ class GoogleCloudTTSProvider(TTSProvider):
             # expand to full ID so synthesis works without a separate model_name.
             if "-" not in voice_id:
                 voice_id = f"{lang_code}-Chirp3-HD-{voice_id}"
+            if voice_id in seen_ids:
+                continue
+            seen_ids.add(voice_id)
             voices.append(
                 Voice(
                     voice_id=voice_id,
