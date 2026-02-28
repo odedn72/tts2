@@ -111,21 +111,25 @@ class GoogleCloudTTSProvider(TTSProvider):
         data = response.json()
         voices: list[Voice] = []
         for voice in data.get("voices", []):
-            for lang_code in voice.get("languageCodes", []):
-                voice_name = voice.get("name", "")
-                # Short names (no dashes) are Chirp3-HD voices; expand to full ID.
-                if "-" not in voice_name:
-                    voice_name = f"{lang_code}-Chirp3-HD-{voice_name}"
-                voices.append(
-                    Voice(
-                        voice_id=voice_name,
-                        name=voice_name.split("-")[-1],
-                        language_code=lang_code,
-                        language_name=lang_code,
-                        gender=voice.get("ssmlGender"),
-                        provider=ProviderName.GOOGLE,
-                    )
+            lang_codes = voice.get("languageCodes", [])
+            if not lang_codes:
+                continue
+            # Pick en-US if available, otherwise the first language code
+            lang_code = "en-US" if "en-US" in lang_codes else lang_codes[0]
+            voice_name = voice.get("name", "")
+            # Short names (no dashes) are Chirp3-HD voices; expand to full ID.
+            if "-" not in voice_name:
+                voice_name = f"{lang_code}-Chirp3-HD-{voice_name}"
+            voices.append(
+                Voice(
+                    voice_id=voice_name,
+                    name=voice_name.split("-")[-1],
+                    language_code=lang_code,
+                    language_name=lang_code,
+                    gender=voice.get("ssmlGender"),
+                    provider=ProviderName.GOOGLE,
                 )
+            )
 
         return voices
 
@@ -212,22 +216,26 @@ class GoogleCloudTTSProvider(TTSProvider):
 
         voices: list[Voice] = []
         for voice in response.voices:
-            for lang_code in voice.language_codes:
-                voice_id = voice.name
-                # Short names (no dashes, e.g. "Achernar") are Chirp3-HD voices;
-                # expand to full ID so synthesis works without a separate model_name.
-                if "-" not in voice_id:
-                    voice_id = f"{lang_code}-Chirp3-HD-{voice_id}"
-                voices.append(
-                    Voice(
-                        voice_id=voice_id,
-                        name=voice_id.split("-")[-1],
-                        language_code=lang_code,
-                        language_name=lang_code,
-                        gender=voice.ssml_gender.name if voice.ssml_gender else None,
-                        provider=ProviderName.GOOGLE,
-                    )
+            lang_codes = list(voice.language_codes)
+            if not lang_codes:
+                continue
+            # Pick en-US if available, otherwise the first language code
+            lang_code = "en-US" if "en-US" in lang_codes else lang_codes[0]
+            voice_id = voice.name
+            # Short names (no dashes, e.g. "Achernar") are Chirp3-HD voices;
+            # expand to full ID so synthesis works without a separate model_name.
+            if "-" not in voice_id:
+                voice_id = f"{lang_code}-Chirp3-HD-{voice_id}"
+            voices.append(
+                Voice(
+                    voice_id=voice_id,
+                    name=voice_id.split("-")[-1],
+                    language_code=lang_code,
+                    language_name=lang_code,
+                    gender=voice.ssml_gender.name if voice.ssml_gender else None,
+                    provider=ProviderName.GOOGLE,
                 )
+            )
 
         self._voices_cache = voices
         return voices
