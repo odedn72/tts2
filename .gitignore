@@ -33,6 +33,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+single-healer-453016-d2-c36564eb4631.json
 
 # Audio output
 /audio_output/
