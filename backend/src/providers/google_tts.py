@@ -75,21 +75,33 @@ class GoogleCloudTTSProvider(TTSProvider):
         """
         Get or create the Google TTS async client (service account path).
 
+        Loads credentials from the configured JSON file path.
         This is a separate method to allow easy mocking in tests.
         """
         from google.cloud import texttospeech
+        from google.oauth2 import service_account
 
         credentials_path = self._config.get_google_credentials_path()
+        if credentials_path:
+            credentials = service_account.Credentials.from_service_account_file(credentials_path)
+            return texttospeech.TextToSpeechAsyncClient(credentials=credentials)
         return texttospeech.TextToSpeechAsyncClient()
 
     # ── REST API path (API key) ─────────────────────────────────────
 
+    def _rest_headers(self) -> dict[str, str]:
+        """Build headers for REST API requests with API key auth."""
+        api_key = self._config.get_google_api_key() or ""
+        return {
+            "X-Goog-Api-Key": api_key,
+            "Content-Type": "application/json",
+        }
+
     async def _rest_list_voices(self) -> list[Voice]:
         """List voices via the Google TTS REST API using an API key."""
-        api_key = self._config.get_google_api_key()
         url = f"{GOOGLE_TTS_BASE_URL}/voices"
 
-        response = await self._http_client.get(url, params={"key": api_key})
+        response = await self._http_client.get(url, headers=self._rest_headers())
 
         if response.status_code in (401, 403):
             raise ProviderAuthError("google", sanitize_provider_error(response.text))
@@ -118,7 +130,6 @@ class GoogleCloudTTSProvider(TTSProvider):
         self, text: str, voice_id: str, speed: float
     ) -> SynthesisResult:
         """Synthesize speech via the Google TTS REST API using an API key."""
-        api_key = self._config.get_google_api_key()
         url = f"{GOOGLE_TTS_BASE_URL}/text:synthesize"
 
         # Extract language code from voice_id (e.g. "en-US-Neural2-A" -> "en-US")
@@ -140,7 +151,7 @@ class GoogleCloudTTSProvider(TTSProvider):
             },
         }
 
-        response = await self._http_client.post(url, params={"key": api_key}, json=payload)
+        response = await self._http_client.post(url, headers=self._rest_headers(), json=payload)
 
         if response.status_code in (401, 403):
             raise ProviderAuthError("google", sanitize_provider_error(response.text))

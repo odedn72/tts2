@@ -224,7 +224,7 @@ class TestGoogleCloudTTSProviderListVoicesREST:
         assert voices[1].voice_id == "en-US-Neural2-C"
 
     @pytest.mark.asyncio
-    async def test_list_voices_rest_passes_api_key(self):
+    async def test_list_voices_rest_passes_api_key_header(self):
         from src.providers.google_tts import GoogleCloudTTSProvider
 
         provider = GoogleCloudTTSProvider(_make_config(api_key="AIza-test-key"))
@@ -237,7 +237,7 @@ class TestGoogleCloudTTSProviderListVoicesREST:
         await provider.list_voices()
         provider._http_client.get.assert_called_once()
         call_kwargs = provider._http_client.get.call_args
-        assert call_kwargs.kwargs["params"]["key"] == "AIza-test-key"
+        assert call_kwargs.kwargs["headers"]["X-Goog-Api-Key"] == "AIza-test-key"
 
     @pytest.mark.asyncio
     async def test_list_voices_rest_auth_error(self):
@@ -354,7 +354,7 @@ class TestGoogleCloudTTSProviderSynthesizeREST:
         await provider.synthesize("Test text", "en-US-Neural2-A", 1.5)
 
         call_kwargs = provider._http_client.post.call_args
-        assert call_kwargs.kwargs["params"]["key"] == "AIza-test-key"
+        assert call_kwargs.kwargs["headers"]["X-Goog-Api-Key"] == "AIza-test-key"
         payload = call_kwargs.kwargs["json"]
         assert payload["input"]["text"] == "Test text"
         assert payload["voice"]["name"] == "en-US-Neural2-A"
